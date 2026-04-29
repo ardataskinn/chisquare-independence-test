@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ki-Kare Bagimsizlik Testi</title>
+  <title>Ki-Kare Bağımsızlık Testi</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
   <style>
     :root {
       --bg: #14304a;
@@ -56,6 +57,44 @@
       color: #1e1e1e;
     }
     .explain strong { color: #124e78; }
+    .steps {
+      margin: 0.7rem 0 0.2rem;
+      padding-left: 1.15rem;
+    }
+    .steps li {
+      margin: 0.45rem 0;
+    }
+    .formula-line {
+      margin: 0.35rem 0;
+      font-weight: bold;
+      color: #1f2a44;
+    }
+    .formula-card {
+      margin: 0.7rem 0;
+      padding: 0.75rem;
+      border: 2px dashed #2a1f73;
+      background: #efe9ff;
+    }
+    .formula-title {
+      margin: 0 0 0.3rem;
+      font-weight: bold;
+      color: #2a1f73;
+    }
+    .formula-box {
+      overflow-x: auto;
+      padding: 0.3rem 0.1rem;
+      background: #fff;
+      border: 1px solid #b9a8f7;
+    }
+    .table-image {
+      width: 100%;
+      max-width: 700px;
+      border: 3px solid #2a1f73;
+      box-shadow: 5px 5px 0 #c8b6ff;
+      background: #fff;
+      display: block;
+      margin: 0.7rem auto 0.2rem;
+    }
     fieldset {
       border: 3px groove var(--cyan);
       margin: 0 0 0.9rem;
@@ -166,47 +205,73 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>★ Ki-Kare Bagimsizlik Testi ★</h1>
+    <h1>★ Ki-Kare Bağımsızlık Testi ★</h1>
 
     <section class="card">
       <h2>Konu Anlatimi</h2>
       <div class="explain">
-        <p><strong>Ki-kare bagimsizlik testi</strong>, iki kategorik degisken arasinda iliski olup olmadigini inceler. Ornegin bir degisken sinif, digeri not kategorisi olabilir.</p>
-        <p><strong>H0:</strong> Dagilimlar bagimsizdir, yani satir ve sutunlar arasinda anlamli iliski yoktur.</p>
-        <p><strong>H1:</strong> Dagilimlar bagimsiz degildir, en az bir kategori digerlerinden farkli davranir.</p>
+        <p><strong>Ki-kare bağımsızlık testi</strong>, iki kategorik değişken arasında ilişki var mı yok mu bunu test etmek için kullanılır. Bu sayfada girilen tabloya göre tüm süreç otomatik hesaplanır.</p>
+        <ol class="steps">
+          <li><strong>Hipotezleri kur:</strong> H0: Değişkenler bağımsızdır. H1: Değişkenler bağımlıdır, yani ilişki vardır.</li>
+          <li><strong>Kontenjans tablosunu oluştur:</strong> Verini satırlar ve sütunlar halinde tabloya yerleştirirsin.</li>
+          <li><strong>Beklenen değerleri hesapla:</strong> Her hücre için satır toplamı x sütun toplamı / genel toplam kullanılır.</li>
+          <li><strong>Ki-kare istatistiğini bul:</strong> Tüm hücreler için (O - E) karesi / E toplanır.</li>
+          <li><strong>Serbestlik derecesini hesapla:</strong> df = (satır sayısı - 1) x (sütun sayısı - 1).</li>
+          <li><strong>p-değeri veya kritik değer ile karşılaştır:</strong> Genelde alfa 0.05 seçilir.</li>
+          <li><strong>Karar ver:</strong> p-değeri &lt; alfa ise H0 reddedilir, değilse H0 reddedilemez.</li>
+          <li><strong>Yorum yap:</strong> H0 reddedilirse ilişki vardır; reddedilemezse bağımsız kabul edilir.</li>
+        </ol>
+        <div class="formula-card">
+          <p class="formula-title">Beklenen değer formülü</p>
+          <div class="formula-box" data-tex="E_{ij}=\dfrac{(\text{satır toplamı})\times(\text{sütun toplamı})}{N}"></div>
+          <p class="formula-line">Yazıyla: Beklenen değer = (satır toplamı x sütun toplamı) / N</p>
+        </div>
+        <div class="formula-card">
+          <p class="formula-title">Ki-kare test istatistiği</p>
+          <div class="formula-box" data-tex="\chi \text{ karesi } = \sum \dfrac{(O-E) \text{ karesi}}{E}"></div>
+          <p class="formula-line">Yazıyla: Ki-kare = Toplam[(O - E) karesi / E]</p>
+        </div>
       </div>
-      <h2>Ornek Soru</h2>
+      <h2>Örnek Soru</h2>
       <div class="explain">
-        <p>Farkli siniflardaki ogrencilerin not dagilimi ayni mi, yoksa en az bir sinifin performansi farkli mi?</p>
+        <p>Farklı sınıflardaki öğrencilerin not dağılımı aynı mı, yoksa en az bir sınıfın performansı farklı mı? Tablonu gir, alfa değerini belirle, sistem otomatik olarak beklenen değerleri, ki-kare istatistiğini, p-değerini ve son kararı versin.</p>
       </div>
     </section>
 
     <section class="card">
-      <h2>Hesaplama Alani</h2>
+      <h2>Hesaplama Alanı</h2>
       <fieldset>
         <legend>Temel Ayarlar</legend>
         <div class="row">
-          <label for="alpha">Alfa degeri</label>
+          <label for="alpha">Alfa değeri</label>
           <input id="alpha" type="number" min="0.0001" max="0.5" step="0.001" value="0.05" />
         </div>
         <div class="row">
-          <button type="button" id="addRow">Satir Ekle</button>
-          <button type="button" id="removeRow" class="btn-alt">Satir Sil</button>
-          <button type="button" id="addCol">Sutun Ekle</button>
-          <button type="button" id="removeCol" class="btn-alt">Sutun Sil</button>
+          <button type="button" id="addRow">Satır Ekle</button>
+          <button type="button" id="removeRow" class="btn-alt">Satır Sil</button>
+          <button type="button" id="addCol">Sütun Ekle</button>
+          <button type="button" id="removeCol" class="btn-alt">Sütun Sil</button>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Gozlem Tablosu</legend>
+        <legend>Gözlem Tablosu</legend>
         <div class="table-wrap">
           <table id="obsTable"></table>
         </div>
       </fieldset>
 
       <button type="button" id="calculate">Testi Hesapla</button>
-      <div class="out" id="result">Sonuc burada gorunecek.</div>
-      <div class="out" id="expected">Beklenen frekanslar burada gorunecek.</div>
+      <div class="out" id="result">Sonuç burada görünecek.</div>
+      <div class="out" id="expected">Beklenen frekanslar burada görünecek.</div>
+    </section>
+
+    <section class="card">
+      <h2>Ki-kare Kritik Değer Tablosu</h2>
+      <div class="explain">
+        <p>Sonucu <strong>kritik değer yaklaşımıyla</strong> karşılaştırmak istersen bu tabloyu kullanabilirsin: önce serbestlik derecesini bul, sonra seçtiğin alfa sütunundan kritik değeri oku. Eğer hesaplanan ki-kare değeri kritik değerden büyükse H0 reddedilir.</p>
+      </div>
+      <img class="table-image" src="/Users/ardataskin/.cursor/projects/Users-ardataskin-cursordosyalari/assets/image-981aa1d0-0f00-442c-9cae-fa0d7e206c51.png" alt="Ki-kare dağılımı kritik değer tablosu" />
     </section>
 
     <footer>
@@ -214,6 +279,7 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
   <script>
     const state = {
       rowNames: ["S1", "S2", "S3"],
@@ -275,7 +341,7 @@
 
     function renderTable() {
       const table = document.getElementById("obsTable");
-      let html = "<thead><tr><th>Satir \\ Sutun</th>";
+      let html = "<thead><tr><th>Satır \\ Sütun</th>";
       for (let c = 0; c < state.colNames.length; c += 1) {
         html += "<th><input class='name-input' type='text' value='" + state.colNames[c] + "' data-col-name='" + c + "'></th>";
       }
@@ -296,13 +362,13 @@
       document.querySelectorAll("[data-row-name]").forEach((el) => {
         el.addEventListener("input", (e) => {
           const r = Number(e.target.getAttribute("data-row-name"));
-          state.rowNames[r] = e.target.value || "Satir " + (r + 1);
+          state.rowNames[r] = e.target.value || "Satır " + (r + 1);
         });
       });
       document.querySelectorAll("[data-col-name]").forEach((el) => {
         el.addEventListener("input", (e) => {
           const c = Number(e.target.getAttribute("data-col-name"));
-          state.colNames[c] = e.target.value || "Sutun " + (c + 1);
+          state.colNames[c] = e.target.value || "Sütun " + (c + 1);
         });
       });
       document.querySelectorAll("[data-cell-r]").forEach((el) => {
@@ -347,7 +413,7 @@
       const rows = state.rowNames.length;
       const cols = state.colNames.length;
       if (rows < 2 || cols < 2) {
-        document.getElementById("result").innerHTML = "<span class='err'>En az 2 satir ve 2 sutun olmali.</span>";
+        document.getElementById("result").innerHTML = "<span class='err'>En az 2 satır ve 2 sütun olmalı.</span>";
         return;
       }
       const observed = state.data.map((row) => row.map((v) => (Number.isFinite(v) && v >= 0 ? v : 0)));
@@ -355,8 +421,8 @@
       const colTotals = Array.from({ length: cols }, (_, c) => observed.reduce((sum, row) => sum + row[c], 0));
       const grandTotal = rowTotals.reduce((a, b) => a + b, 0);
       if (grandTotal === 0) {
-        document.getElementById("result").innerHTML = "<span class='err'>Toplam gozlem 0 olamaz.</span>";
-        document.getElementById("expected").textContent = "Beklenen frekanslar hesaplanamadi.";
+        document.getElementById("result").innerHTML = "<span class='err'>Toplam gözlem 0 olamaz.</span>";
+        document.getElementById("expected").textContent = "Beklenen frekanslar hesaplanamadı.";
         return;
       }
       const expected = observed.map((_, r) => colTotals.map((_, c) => (rowTotals[r] * colTotals[c]) / grandTotal));
@@ -370,11 +436,11 @@
       const df = (rows - 1) * (cols - 1);
       const pValue = chiSquarePValue(chi2, df);
       const significant = pValue < alpha;
-      const decision = significant ? "H0 reddedilir: kategoriler arasinda anlamli fark vardir." : "H0 reddedilemez: anlamli fark kaniti yoktur.";
+      const decision = significant ? "H0 reddedilir: kategoriler arasında anlamlı fark vardır." : "H0 reddedilemez: anlamlı fark kanıtı yoktur.";
       document.getElementById("result").innerHTML =
-        "Ki-kare: <span class='val'>" + chi2.toFixed(4) + "</span><br>" +
+        "Ki-kare değeri: <span class='val'>" + chi2.toFixed(4) + "</span><br>" +
         "Serbestlik derecesi: <span class='val'>" + df + "</span><br>" +
-        "p-degeri: <span class='val'>" + pValue.toFixed(6) + "</span><br>" +
+        "p-değeri: <span class='val'>" + pValue.toFixed(6) + "</span><br>" +
         "Alfa: <span class='val'>" + alpha + "</span><br>" +
         decision;
       let expectedHtml = "<table><thead><tr><th>Beklenen</th>";
@@ -394,6 +460,12 @@
     document.getElementById("addCol").addEventListener("click", addCol);
     document.getElementById("removeCol").addEventListener("click", removeCol);
     document.getElementById("calculate").addEventListener("click", calculateChiSquare);
+    document.querySelectorAll(".formula-box[data-tex]").forEach((el) => {
+      const tex = el.getAttribute("data-tex");
+      if (tex && typeof katex !== "undefined") {
+        katex.render(tex, el, { displayMode: true, throwOnError: false });
+      }
+    });
     renderTable();
     calculateChiSquare();
   </script>
