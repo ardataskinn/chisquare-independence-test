@@ -192,6 +192,15 @@
       color: #b20000;
       font-weight: bold;
     }
+    .low-expected {
+      background: #ffb3b3;
+      color: #7a0000;
+      font-weight: bold;
+    }
+    .warn {
+      color: #8a1f00;
+      font-weight: bold;
+    }
     footer {
       text-align: center;
       color: var(--cyan);
@@ -251,6 +260,7 @@
           <button type="button" id="removeRow" class="btn-alt">Satır Sil</button>
           <button type="button" id="addCol">Sütun Ekle</button>
           <button type="button" id="removeCol" class="btn-alt">Sütun Sil</button>
+          <button type="button" id="fixLowExpected" class="btn-alt" hidden>Düzelt (Birleştir)</button>
         </div>
       </fieldset>
 
@@ -337,6 +347,73 @@
 
     function chiSquarePValue(chi2, df) {
       return 1 - gammaLowerReg(df / 2, chi2 / 2);
+    }
+
+    function computeFromState() {
+      const rows = state.rowNames.length;
+      const cols = state.colNames.length;
+      const observed = state.data.map((row) => row.map((v) => (Number.isFinite(v) && v >= 0 ? v : 0)));
+      const rowTotals = observed.map((row) => row.reduce((a, b) => a + b, 0));
+      const colTotals = Array.from({ length: cols }, (_, c) => observed.reduce((sum, row) => sum + row[c], 0));
+      const grandTotal = rowTotals.reduce((a, b) => a + b, 0);
+      if (grandTotal === 0) return { rows, cols, observed, rowTotals, colTotals, grandTotal, expected: [] };
+      const expected = observed.map((_, r) => colTotals.map((_, c) => (rowTotals[r] * colTotals[c]) / grandTotal));
+      return { rows, cols, observed, rowTotals, colTotals, grandTotal, expected };
+    }
+
+    function minExpectedCell(expected) {
+      let minValue = Number.POSITIVE_INFINITY;
+      let minRow = -1;
+      let minCol = -1;
+      for (let r = 0; r < expected.length; r += 1) {
+        for (let c = 0; c < expected[r].length; c += 1) {
+          if (expected[r][c] < minValue) {
+            minValue = expected[r][c];
+            minRow = r;
+            minCol = c;
+          }
+        }
+      }
+      return { minValue, minRow, minCol };
+    }
+
+    function columnTotal(expected, c) {
+      let total = 0;
+      for (let r = 0; r < expected.length; r += 1) total += expected[r][c];
+      return total;
+    }
+
+    function mergeColumns(c1, c2) {
+      for (let r = 0; r < state.data.length; r += 1) state.data[r][c1] += state.data[r][c2];
+      const newName = state.colNames[c1] + " + " + state.colNames[c2];
+      state.colNames[c1] = newName;
+      state.colNames.splice(c2, 1);
+      for (let r = 0; r < state.data.length; r += 1) state.data[r].splice(c2, 1);
+    }
+
+    function fixLowExpectedCells() {
+      let safety = 0;
+      while (safety < 100) {
+        const calc = computeFromState();
+        if (calc.cols <= 2 || calc.rows < 2 || calc.grandTotal === 0) break;
+        const { minValue, minCol } = minExpectedCell(calc.expected);
+        if (!(minValue < 5)) break;
+        const left = minCol - 1;
+        const right = minCol + 1;
+        if (left < 0 && right < calc.cols) {
+          mergeColumns(minCol, right);
+        } else if (right >= calc.cols && left >= 0) {
+          mergeColumns(left, minCol);
+        } else {
+          const leftScore = columnTotal(calc.expected, left) + columnTotal(calc.expected, minCol);
+          const rightScore = columnTotal(calc.expected, right) + columnTotal(calc.expected, minCol);
+          if (leftScore >= rightScore) mergeColumns(left, minCol);
+          else mergeColumns(minCol, right);
+        }
+        safety += 1;
+      }
+      renderTable();
+      calculateChiSquare();
     }
 
     function renderTable() {
@@ -427,9 +504,11 @@
       }
       const expected = observed.map((_, r) => colTotals.map((_, c) => (rowTotals[r] * colTotals[c]) / grandTotal));
       let chi2 = 0;
+      let lowExpectedCount = 0;
       for (let r = 0; r < rows; r += 1) {
         for (let c = 0; c < cols; c += 1) {
           const e = expected[r][c];
+          if (e < 5) lowExpectedCount += 1;
           if (e > 0) chi2 += ((observed[r][c] - e) ** 2) / e;
         }
       }
@@ -437,18 +516,26 @@
       const pValue = chiSquarePValue(chi2, df);
       const significant = pValue < alpha;
       const decision = significant ? "H0 reddedilir: kategoriler arasında anlamlı fark vardır." : "H0 reddedilemez: anlamlı fark kanıtı yoktur.";
+      const assumptionMsg = lowExpectedCount > 0
+        ? "<br><span class='warn'>Uyarı: " + lowExpectedCount + " hücrede beklenen değer 5'ten küçük. Düzelt (Birleştir) butonunu kullanabilirsin.</span>"
+        : "<br>Beklenen değer varsayımı uygun görünüyor.";
+      document.getElementById("fixLowExpected").hidden = lowExpectedCount === 0;
       document.getElementById("result").innerHTML =
         "Ki-kare değeri: <span class='val'>" + chi2.toFixed(4) + "</span><br>" +
         "Serbestlik derecesi: <span class='val'>" + df + "</span><br>" +
         "p-değeri: <span class='val'>" + pValue.toFixed(6) + "</span><br>" +
         "Alfa: <span class='val'>" + alpha + "</span><br>" +
-        decision;
+        decision +
+        assumptionMsg;
       let expectedHtml = "<table><thead><tr><th>Beklenen</th>";
       for (let c = 0; c < cols; c += 1) expectedHtml += "<th>" + state.colNames[c] + "</th>";
       expectedHtml += "</tr></thead><tbody>";
       for (let r = 0; r < rows; r += 1) {
         expectedHtml += "<tr><th>" + state.rowNames[r] + "</th>";
-        for (let c = 0; c < cols; c += 1) expectedHtml += "<td>" + expected[r][c].toFixed(2) + "</td>";
+        for (let c = 0; c < cols; c += 1) {
+          const cls = expected[r][c] < 5 ? " class='low-expected'" : "";
+          expectedHtml += "<td" + cls + ">" + expected[r][c].toFixed(2) + "</td>";
+        }
         expectedHtml += "</tr>";
       }
       expectedHtml += "</tbody></table>";
@@ -459,6 +546,7 @@
     document.getElementById("removeRow").addEventListener("click", removeRow);
     document.getElementById("addCol").addEventListener("click", addCol);
     document.getElementById("removeCol").addEventListener("click", removeCol);
+    document.getElementById("fixLowExpected").addEventListener("click", fixLowExpectedCells);
     document.getElementById("calculate").addEventListener("click", calculateChiSquare);
     document.querySelectorAll(".formula-box[data-tex]").forEach((el) => {
       const tex = el.getAttribute("data-tex");
